@@ -17,9 +17,11 @@
 */
 package com.binaryelysium.mp3tunes;
 
+import org.xmlpull.v1.XmlPullParser;
+
 public class Album {
 	int mId;
-	String mTitle;
+	String mName;
 	String mYear; 
 	int mTrackCount;
 	int mSize;
@@ -39,8 +41,8 @@ public class Album {
 	public int getId() {
 		return mId;
 	}
-	public String getTitle() {
-		return mTitle;
+	public String getName() {
+		return mName;
 	}
 	public String getYear() {
 		return mYear;
@@ -65,6 +67,48 @@ public class Album {
 	}
 	public String getArtistName() {
 		return mArtistName;
+	}
+	
+	public static Album albumFromResult(Result result) {
+		try {
+			Album a = new Album();
+			int event = result.getParser().nextTag();
+			boolean loop = true;
+			while (loop) {
+				String name = result.getParser().getName();
+				switch (event) {
+				case XmlPullParser.START_TAG:
+					if (name.equals("albumId")) {
+						a.mId = Integer.parseInt(result.getParser().nextText());
+					} else if (name.equals("albumSize")) {
+						a.mSize = Integer.parseInt(result.getParser().nextText());
+					} else if (name.equals("albumTitle")) {
+						a.mName = result.getParser().nextText();
+					} else if (name.equals("artistId")) {
+						a.mArtistId = Integer.parseInt(result.getParser().nextText());
+					} else if (name.equals("trackCount")) {
+						a.mTrackCount = Integer.parseInt(result.getParser().nextText());
+					} else if (name.equals("artistName")) {
+						a.mArtistName = result.getParser().nextText();
+					} else if (name.equals("hasArt")) {
+						a.mHasArt = Integer.parseInt(result.getParser().nextText());
+					} else if (name.equals("purchaseDate")) {
+						a.mPurhaseDate = result.getParser().nextText();
+					} else if (name.equals("releaseDate")) {
+						a.mReleaseDate = result.getParser().nextText();
+					}
+					break;
+				case XmlPullParser.END_TAG:
+					if (name.equals("item"))
+						loop = false;
+					break;
+				}
+				event = result.getParser().next();
+			}
+			return a;
+		} catch (Exception e) {
+		}
+		return null;
 	}
 	
 }
