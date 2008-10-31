@@ -17,14 +17,14 @@ public class Authenticator {
 	 * @see Session
 	 */
 	public static Session getSession(String token, String user, String password) {
-		Caller caller = Caller.getInstance();
-		caller.setApiRootUrl(Caller.API_LOGIN);
 		String m = "login";
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("username", user);
 		params.put("partner_token", token);
 		params.put("password", password);
+		Caller.getInstance().setApiRootUrl(Caller.API_LOGIN);
 		Result result = Caller.getInstance().call(m, params);
+		Caller.getInstance().setApiRootUrl(Caller.API_GENERAL);
 		return Session.sessionFromResult(result);
 	}
 }

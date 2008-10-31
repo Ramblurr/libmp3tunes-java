@@ -40,7 +40,7 @@ public class Caller {
 			super(message, cause);
 		}
 	}
-	private static final String API_GENERAL = "http://ws.mp3tunes.com/api/v1/";
+	public static final String API_GENERAL = "http://ws.mp3tunes.com/api/v1/";
 	public static final String API_STORAGE = "http://ws.mp3tunes.com/api/v1/";
 	public static final String API_LOGIN = "https://shop.mp3tunes.com/api/v1/";
 	private static final String PARAM_PARTNER_TOKEN = "partner_token";
