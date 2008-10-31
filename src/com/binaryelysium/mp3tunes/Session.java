@@ -25,10 +25,11 @@ public class Session {
 				return null;
 			Session s = new Session();
 			int event = result.getParser().nextTag();
-			while (event != XmlPullParser.END_DOCUMENT && !result.getParser().getName().equals("mp3tunes")) {
+			boolean loop = true;
+			while (loop && event != XmlPullParser.END_DOCUMENT) {
+				String name = result.getParser().getName();
 				switch (event) {
 				case XmlPullParser.START_TAG:
-					String name = result.getParser().getName();
 					if (name.equals("status")) {
 						String status = result.getParser().nextText();
 						if(status.equals("0")) // authentication failed
@@ -40,7 +41,10 @@ public class Session {
 					}
 					break;
 				case XmlPullParser.END_TAG:
-					break;
+					if(name.equals("mp3tunes")) {
+						loop = false;
+						continue;
+					}
 				}
 				event = result.getParser().nextTag();
 			}
