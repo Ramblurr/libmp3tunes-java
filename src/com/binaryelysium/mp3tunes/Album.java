@@ -14,9 +14,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ */
 package com.binaryelysium.mp3tunes;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -24,7 +25,7 @@ import org.xmlpull.v1.XmlPullParser;
 public class Album {
 	int mId;
 	String mName;
-	String mYear; 
+	String mYear;
 	int mTrackCount;
 	int mSize;
 	String mReleaseDate;
@@ -33,46 +34,62 @@ public class Album {
 	int mArtistId;
 	String mArtistName;
 	Collection<Track> mTracks;
-	
-	private Album(){}
-	
+
+	private Album() {
+	}
+
 	public int getId() {
 		return mId;
 	}
+
 	public String getName() {
 		return mName;
 	}
+
 	public String getYear() {
 		return mYear;
 	}
+
 	public int getTrackCount() {
 		return mTrackCount;
 	}
+
 	public int getSize() {
 		return mSize;
 	}
+
 	public String getReleaseDate() {
 		return mReleaseDate;
 	}
+
 	public String getPurhaseDate() {
 		return mPurhaseDate;
 	}
+
 	public int getHasArt() {
 		return mHasArt;
 	}
+
 	public int getArtistId() {
 		return mArtistId;
 	}
+
 	public String getArtistName() {
 		return mArtistName;
 	}
+
 	public Collection<Track> getTracks() {
-		if( mTracks == null ) { // we need to fetch the tracks
-			
+		if (mTracks == null) { // we need to fetch the tracks
+			try {
+				mTracks = Locker
+						.fetchTracks("", "", Integer.toString(this.mId));
+			} catch (LockerException e) {
+				mTracks = new ArrayList<Track>();
+			}
 		}
 		return mTracks;
 	}
-	
+
 	public static Album albumFromResult(Result result) {
 		try {
 			Album a = new Album();
@@ -85,17 +102,21 @@ public class Album {
 					if (name.equals("albumId")) {
 						a.mId = Integer.parseInt(result.getParser().nextText());
 					} else if (name.equals("albumSize")) {
-						a.mSize = Integer.parseInt(result.getParser().nextText());
+						a.mSize = Integer.parseInt(result.getParser()
+								.nextText());
 					} else if (name.equals("albumTitle")) {
 						a.mName = result.getParser().nextText();
 					} else if (name.equals("artistId")) {
-						a.mArtistId = Integer.parseInt(result.getParser().nextText());
+						a.mArtistId = Integer.parseInt(result.getParser()
+								.nextText());
 					} else if (name.equals("trackCount")) {
-						a.mTrackCount = Integer.parseInt(result.getParser().nextText());
+						a.mTrackCount = Integer.parseInt(result.getParser()
+								.nextText());
 					} else if (name.equals("artistName")) {
 						a.mArtistName = result.getParser().nextText();
 					} else if (name.equals("hasArt")) {
-						a.mHasArt = Integer.parseInt(result.getParser().nextText());
+						a.mHasArt = Integer.parseInt(result.getParser()
+								.nextText());
 					} else if (name.equals("purchaseDate")) {
 						a.mPurhaseDate = result.getParser().nextText();
 					} else if (name.equals("releaseDate")) {
@@ -114,5 +135,5 @@ public class Album {
 		}
 		return null;
 	}
-	
+
 }

@@ -156,7 +156,7 @@ public class Locker {
 		return fetchAlbums("", "", "");
 	}
 
-	private Collection<Album> fetchAlbums(String artistId, String token,
+	protected static Collection<Album> fetchAlbums(String artistId, String token,
 			String albumId) throws LockerException {
 		String m = "lockerData";
 		Map<String, String> params = new HashMap<String, String>();
@@ -217,8 +217,9 @@ public class Locker {
 	public Collection<Track> getTracksForToken(String token) throws LockerException {
 		return fetchTracks("", token, "");
 	}
+	
 
-	private Collection<Track> fetchTracks(String artistId, String token,
+	protected static Collection<Track> fetchTracks(String artistId, String token,
 			String albumId) throws LockerException {
 		String m = "lockerData";
 		Map<String, String> params = new HashMap<String, String>();
