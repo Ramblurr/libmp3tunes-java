@@ -136,10 +136,12 @@ public class AccountData {
 		return null;
 	}
 
-	public static AccountData getAccountData(Session session) {
+	public static AccountData getAccountData(Session session) throws LockerException {
 		String m = "accountData";
 		Map<String, String> params = new HashMap<String, String>();
-		Result result = Caller.getInstance().call(m, session, params);
+		Result result = Caller.getInstance().call(m, params);
+		if (!result.isSuccessful())
+			throw (new LockerException("Call Failed: " + result.getErrorMessage()));
 		return AccountData.accountDataFromResult(result);
 	}
 }

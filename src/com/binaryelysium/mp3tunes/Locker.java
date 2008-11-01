@@ -33,26 +33,30 @@ public class Locker {
 		locker, playlist, preferences
 	};
 
-	public Locker(String partnerToken, Session session) {
+	/*public Locker(String partnerToken, Session session) {
 		if (mSession == null)
 			throw (new LockerException("Invalid Session"));
 		mSession = session;
 		mPartnerToken = partnerToken;
-	}
+	}*/
 
 	public Locker(String partnerToken, String username, String password) {
 		mSession = Authenticator.getSession(partnerToken,
 				"unnamedrambler@gmail.com", "br34nn4");
+		Caller.getInstance().setSession(mSession);
 		if (mSession == null)
 			throw (new LockerException("Authentication failed"));
 		mPartnerToken = partnerToken;
 	}
+	
 
 	public long getLastUpdate(UpdateType type) throws LockerException {
 		String m = "lastUpdate";
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("type", type.toString());
-		Result result = Caller.getInstance().call(m, mSession, params);
+		Result result = Caller.getInstance().call(m, params);
+		if (!result.isSuccessful())
+			throw (new LockerException("Call Failed: " + result.getErrorMessage()));
 		try {
 			int event = result.getParser().nextTag();
 
@@ -79,11 +83,29 @@ public class Locker {
 		return 0;
 	}
 
+	public Artist getArtist(int id) throws NoSuchEntryException {
+		Collection<Artist> list = fetchArtists(Integer.toString(id));
+		if (list.size() == 1)
+			return list.iterator().next();
+		else
+			throw (new NoSuchEntryException("No such artist w/ id " + id));
+
+	}
+
 	public Collection<Artist> getArtists() throws LockerException {
+		return fetchArtists("");
+	}
+
+	private Collection<Artist> fetchArtists(String artistId)
+			throws LockerException {
 		String m = "lockerData";
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("type", "artist");
-		Result result = Caller.getInstance().call(m, mSession, params);
+		if (artistId != "")
+			params.put("artist_id", artistId);
+		Result result = Caller.getInstance().call(m, params);
+		if (!result.isSuccessful())
+			throw (new LockerException("Call Failed: " + result.getErrorMessage()));
 		try {
 			Collection<Artist> artists = new ArrayList<Artist>();
 			int event = result.getParser().nextTag();
@@ -113,21 +135,29 @@ public class Locker {
 
 	}
 
-	public Collection<Album> getAlbumsForArtist(int id) throws LockerException {
-		return getAlbums(Integer.toString(id), "");
+	public Album getAlbum(int id) throws NoSuchEntryException {
+		Collection<Album> list = fetchAlbums("", "", Integer.toString(id));
+		if (list.size() == 1)
+			return list.iterator().next();
+		else
+			throw (new NoSuchEntryException("No such album w/ id " + id));
 	}
 
-	public Collection<Album> getAlbumsByToken(String token)
+	public Collection<Album> getAlbumsForArtist(int id) throws LockerException {
+		return fetchAlbums(Integer.toString(id), "", "");
+	}
+
+	public Collection<Album> getAlbumsforToken(String token)
 			throws LockerException {
-		return getAlbums("", token);
+		return fetchAlbums("", token, "");
 	}
 
 	public Collection<Album> getAlbums() throws LockerException {
-		return getAlbums("", "");
+		return fetchAlbums("", "", "");
 	}
 
-	private Collection<Album> getAlbums(String artistId, String token)
-			throws LockerException {
+	private Collection<Album> fetchAlbums(String artistId, String token,
+			String albumId) throws LockerException {
 		String m = "lockerData";
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("type", "album");
@@ -135,8 +165,12 @@ public class Locker {
 			params.put("artist_id", artistId);
 		if (token != "")
 			params.put("token", token);
+		if (albumId != "")
+			params.put("album_id", albumId);
 
-		Result result = Caller.getInstance().call(m, mSession, params);
+		Result result = Caller.getInstance().call(m, params);
+		if (!result.isSuccessful())
+			throw (new LockerException("Call Failed: " + result.getErrorMessage()));
 		try {
 			Collection<Album> albums = new ArrayList<Album>();
 			int event = result.getParser().nextTag();
@@ -166,22 +200,65 @@ public class Locker {
 
 	}
 
-	@SuppressWarnings("serial")
-	public class LockerException extends RuntimeException {
 
-		public LockerException() {
+
+	public Collection<Track> getTracks() throws LockerException {
+		return fetchTracks("", "", "");
+	}
+	
+	public Collection<Track> getTracksForAlbum(int albumId) throws LockerException {
+		return fetchTracks("", "", Integer.toString(albumId));
+	}
+	
+	public Collection<Track> getTracksForArtist(int artistId) throws LockerException {
+		return fetchTracks(Integer.toString(artistId), "", "");
+	}
+	
+	public Collection<Track> getTracksForToken(String token) throws LockerException {
+		return fetchTracks("", token, "");
+	}
+
+	private Collection<Track> fetchTracks(String artistId, String token,
+			String albumId) throws LockerException {
+		String m = "lockerData";
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("type", "track");
+		if (artistId != "")
+			params.put("artist_id", artistId);
+		if (token != "")
+			params.put("token", token);
+		if (albumId != "")
+			params.put("album_id", albumId);
+
+		Result result = Caller.getInstance().call(m, params);
+		if (!result.isSuccessful())
+			throw (new LockerException("Call Failed: " + result.getErrorMessage()));
+		try {
+			Collection<Track> tracks = new ArrayList<Track>();
+			int event = result.getParser().nextTag();
+			boolean loop = true;
+			while (loop && event != XmlPullParser.END_DOCUMENT) {
+				String name = result.getParser().getName();
+				switch (event) {
+				case XmlPullParser.START_TAG:
+					if (name.equals("item")) {
+						Track t = Track.trackFromResult(result);
+						if (t != null)
+							tracks.add(t);
+					}
+					break;
+				case XmlPullParser.END_TAG:
+					if (name.equals("trackList"))
+						loop = false;
+					break;
+				}
+				event = result.getParser().next();
+			}
+			return tracks;
+		} catch (Exception e) {
+			throw (new LockerException("Getting albums failed: "
+					+ e.getMessage()));
 		}
 
-		public LockerException(Throwable cause) {
-			super(cause);
-		}
-
-		public LockerException(String message) {
-			super(message);
-		}
-
-		public LockerException(String message, Throwable cause) {
-			super(message, cause);
-		}
 	}
 }

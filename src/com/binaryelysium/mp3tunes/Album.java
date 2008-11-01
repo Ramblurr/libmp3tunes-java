@@ -17,6 +17,8 @@
 */
 package com.binaryelysium.mp3tunes;
 
+import java.util.Collection;
+
 import org.xmlpull.v1.XmlPullParser;
 
 public class Album {
@@ -30,13 +32,9 @@ public class Album {
 	int mHasArt;
 	int mArtistId;
 	String mArtistName;
+	Collection<Track> mTracks;
 	
 	private Album(){}
-	
-	public static Album albumFromXPP()
-	{
-		return new Album();
-	}
 	
 	public int getId() {
 		return mId;
@@ -67,6 +65,12 @@ public class Album {
 	}
 	public String getArtistName() {
 		return mArtistName;
+	}
+	public Collection<Track> getTracks() {
+		if( mTracks == null ) { // we need to fetch the tracks
+			
+		}
+		return mTracks;
 	}
 	
 	public static Album albumFromResult(Result result) {

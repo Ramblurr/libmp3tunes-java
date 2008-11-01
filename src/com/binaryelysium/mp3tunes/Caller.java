@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ */
 
 package com.binaryelysium.mp3tunes;
 
@@ -40,7 +40,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import com.binaryelysium.util.StringUtilities;
 
 public class Caller {
-	
+
 	public class CallerException extends RuntimeException {
 
 		public CallerException() {
@@ -58,6 +58,7 @@ public class Caller {
 			super(message, cause);
 		}
 	}
+
 	public static final String API_GENERAL = "http://ws.mp3tunes.com/api/v1/";
 	public static final String API_STORAGE = "http://ws.mp3tunes.com/api/v1/";
 	public static final String API_LOGIN = "https://shop.mp3tunes.com/api/v1/";
@@ -68,7 +69,9 @@ public class Caller {
 
 	private String mUserAgent = "libmp3tunes-java";
 	private String mApiRootUrl = API_GENERAL;
-	
+
+	private Session mSession;
+
 	private boolean mDebugMode = true;
 
 	private Caller() {
@@ -83,10 +86,10 @@ public class Caller {
 		return instance;
 	}
 
-	public void setApiRootUrl(String url)
-	{
+	public void setApiRootUrl(String url) {
 		mApiRootUrl = url;
 	}
+
 	/**
 	 * Sets a User Agent this Caller will use for all upcoming HTTP requests. If
 	 * you distribute your application use an identifiable User-Agent.
@@ -98,25 +101,14 @@ public class Caller {
 		this.mUserAgent = userAgent;
 	}
 
-	public Result call(String method, String... params)
-			throws CallerException {
+	public void setSession(Session session) {
+		mSession = session;
+	}
+
+	public Result call(String method, String... params) {
 		return call(method, StringUtilities.map(params));
 	}
 
-	public Result call(String method, Map<String, String> params)
-			throws CallerException {
-		return call(method, params, null);
-	}
-
-	public Result call(String method, Session session, String... params) {
-		return call(method, StringUtilities.map(params), session);
-	}
-
-	public Result call(String method, Session session,
-			Map<String, String> params) {
-		return call(method, params, session);
-	}
-	
 	/**
 	 * Performs the web-service call. If the <code>session</code> parameter is
 	 * <code>non-null</code> then an authenticated call is made. If it's
@@ -133,13 +125,13 @@ public class Caller {
 	 * @return the result of the operation
 	 * @throws XmlPullParserException
 	 */
-	private Result call(String method, Map<String, String> params, Session session) {
-		
+	public Result call(String method, Map<String, String> params) {
+
 		// create new Map in case params is an immutable Map
-		params = new HashMap<String, String>(params); 
+		params = new HashMap<String, String>(params);
 		params.put(PARAM_OUTPUT_METHOD, PARAM_OUTPUT_TYPE);
-		if (session != null) {
-			params.put("sid", session.getSessionId());
+		if (mSession != null) {
+			params.put("sid", mSession.getSessionId());
 		}
 		try {
 			String get = buildParameterQueue(method, params);
@@ -152,17 +144,21 @@ public class Caller {
 			OutputStream outputStream = urlConnection.getOutputStream();
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
 					outputStream));
-			
+
 			writer.write(get);
 			writer.close();
 			int responseCode = urlConnection.getResponseCode();
 			InputStream httpInput;
+			String errorHeader = urlConnection.getHeaderField("X-MP3tunes-ErrorNo");
 			if (responseCode == HttpURLConnection.HTTP_FORBIDDEN
 					|| responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
 				httpInput = urlConnection.getErrorStream();
 			} else if (responseCode != HttpURLConnection.HTTP_OK) {
 				return Result.createHttpErrorResult(responseCode, urlConnection
 						.getResponseMessage());
+			} else if (errorHeader != null) {
+				String errorMsg = urlConnection.getHeaderField("X-MP3tunes-ErrorString");
+				return Result.createRestErrorResult(Integer.parseInt(errorHeader), errorMsg);
 			} else {
 				httpInput = urlConnection.getInputStream();
 			}
@@ -174,7 +170,7 @@ public class Caller {
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(httpInput));
 				String response = reader.readLine();
-				
+
 				while (null != response) {
 					all = all.concat(response + "\n");
 					response = reader.readLine();
@@ -182,7 +178,7 @@ public class Caller {
 				System.out.println(all);
 				xpp.setInput(new StringReader(all));
 			} else {
-				xpp.setInput(httpInput, "utf-8");	
+				xpp.setInput(httpInput, "utf-8");
 			}
 			return Result.createOkResult(xpp);
 		} catch (IOException e) {
@@ -191,7 +187,7 @@ public class Caller {
 			return Result.createRestErrorResult(Result.FAILURE, e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * Creates a new {@link HttpURLConnection}, sets the proxy, if available,
 	 * and sets the User-Agent property.
@@ -207,10 +203,11 @@ public class Caller {
 			System.out.println("open: " + url);
 		URL u = new URL(url);
 		HttpURLConnection urlConnection;
-		/*if (proxy != null)
-			urlConnection = (HttpURLConnection) u.openConnection(proxy);
-		else*/
-			urlConnection = (HttpURLConnection) u.openConnection();
+		/*
+		 * if (proxy != null) urlConnection = (HttpURLConnection)
+		 * u.openConnection(proxy); else
+		 */
+		urlConnection = (HttpURLConnection) u.openConnection();
 		urlConnection.setRequestProperty("User-Agent", mUserAgent);
 		return urlConnection;
 	}
@@ -231,7 +228,8 @@ public class Caller {
 		}
 		int count = 0;
 		for (String string : strings) {
-			builder.append(count % 2 == 0 ? string : StringUtilities.encode(string));
+			builder.append(count % 2 == 0 ? string : StringUtilities
+					.encode(string));
 			count++;
 			if (count != strings.length) {
 				if (count % 2 == 0) {
@@ -244,4 +242,3 @@ public class Caller {
 		return builder.toString();
 	}
 }
-
