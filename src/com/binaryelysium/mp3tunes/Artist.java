@@ -17,6 +17,9 @@
 */
 package com.binaryelysium.mp3tunes;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.xmlpull.v1.XmlPullParser;
 
 public class Artist {
@@ -25,6 +28,7 @@ public class Artist {
 	int mTrackCount;
 	int mAlbumCount;
 	int mSize;
+	Collection<Album> mAlbums;
 
 	public int getId() {
 		return mId;
@@ -47,6 +51,18 @@ public class Artist {
 	}
 
 	private Artist() {
+	}
+	
+	public Collection<Album> getAlbums() {
+		if (mAlbums == null) { // we need to fetch the tracks
+			try {
+				mAlbums = Locker
+						.fetchAlbums(Integer.toString(this.mId), "", "");
+			} catch (LockerException e) {
+				mAlbums = new ArrayList<Album>();
+			}
+		}
+		return mAlbums;
 	}
 
 	public static Artist artistFromResult(Result result) {
