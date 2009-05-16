@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-package com.binaryelysium.mp3tunes;
+package com.binaryelysium.mp3tunes.api;
 
 
 import org.xmlpull.v1.XmlPullParser;
@@ -33,7 +33,7 @@ public class Session {
 	public Session() {
 	}
 	
-	public static Session sessionFromResult(Result result)
+	public static Session sessionFromResult(Result result) throws LockerException
 	{
 		try {
 			if (result.getParser() == null)
@@ -51,7 +51,7 @@ public class Session {
 					if (name.equals("status")) {
 						String status = result.getParser().nextText();
 						if(status.equals("0")) // authentication failed
-							return null;
+						    throw (new LockerException("auth failure"));
 					} else if (name.equals("username")) {
 						s.mUsername = result.getParser().nextText();
 					} else if (name.equals("session_id")) {

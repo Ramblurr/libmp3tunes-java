@@ -1,4 +1,4 @@
-package com.binaryelysium.mp3tunes;
+package com.binaryelysium.mp3tunes.api;
 
 @SuppressWarnings("serial")
 public class LockerException extends RuntimeException {

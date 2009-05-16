@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-package com.binaryelysium.mp3tunes;
+package com.binaryelysium.mp3tunes.api;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class Authenticator {
 	 * @return a Session instance
 	 * @see Session
 	 */
-	public static Session getSession(String token, String user, String password) {
+	public static Session getSession(String token, String user, String password) throws LockerException, IOException {
 		String m = "login";
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("username", user);

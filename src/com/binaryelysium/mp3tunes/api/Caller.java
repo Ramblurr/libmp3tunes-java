@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package com.binaryelysium.mp3tunes;
+package com.binaryelysium.mp3tunes.api;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -33,11 +33,16 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import com.binaryelysium.util.StringUtilities;
+import com.sun.net.httpserver.HttpsConfigurator;
 
 public class Caller {
 
@@ -105,7 +110,7 @@ public class Caller {
 		mSession = session;
 	}
 
-	public Result call(String method, String... params) {
+	public Result call(String method, String... params) throws IOException {
 		return call(method, StringUtilities.map(params));
 	}
 
@@ -125,7 +130,7 @@ public class Caller {
 	 * @return the result of the operation
 	 * @throws XmlPullParserException
 	 */
-	public Result call(String method, Map<String, String> params) {
+	public Result call(String method, Map<String, String> params) throws IOException {
 
 		// create new Map in case params is an immutable Map
 		params = new HashMap<String, String>(params);
@@ -138,10 +143,30 @@ public class Caller {
 			if (mDebugMode) {
 				System.out.println("get string: " + mApiRootUrl + get);
 			}
-			HttpURLConnection urlConnection = openConnection(mApiRootUrl + get);
-			urlConnection.setRequestMethod("GET");
-			urlConnection.setDoOutput(true);
-			OutputStream outputStream = urlConnection.getOutputStream();
+			OutputStream outputStream; 
+			URL url = new URL(mApiRootUrl + get);
+			HttpURLConnection urlConnection;
+			if(mApiRootUrl.startsWith( "https" ))
+			{
+			    //We are going to force the Hostname verification, because the android sdk's default
+			    // Verifier is broken
+			    HttpsURLConnection urlsConnection = (HttpsURLConnection) url.openConnection();
+			    urlsConnection.setHostnameVerifier ( new HostnameVerifier() {
+			        public boolean verify ( String hostname, SSLSession session) {
+			            return true;
+			        }
+			    });
+			    urlsConnection.setRequestMethod("GET");
+                urlsConnection.setDoOutput(true);
+                urlConnection = urlsConnection;
+                outputStream = urlConnection.getOutputStream();
+			} else {
+    			urlConnection = openConnection(mApiRootUrl + get);
+    			
+    			urlConnection.setRequestMethod("GET");
+    			urlConnection.setDoOutput(true);
+    			outputStream = urlConnection.getOutputStream();
+			}
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
 					outputStream));
 
@@ -165,12 +190,14 @@ public class Caller {
 			XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
 			factory.setNamespaceAware(true);
 			XmlPullParser xpp = factory.newPullParser();
-			if (mDebugMode) {
+			if (mDebugMode && false) {
 				String all = "";
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(httpInput));
 				String response = reader.readLine();
 
+				System.out.println("While.. loop");
+				
 				while (null != response) {
 					all = all.concat(response + "\n");
 					response = reader.readLine();
@@ -181,8 +208,6 @@ public class Caller {
 				xpp.setInput(httpInput, "utf-8");
 			}
 			return Result.createOkResult(xpp);
-		} catch (IOException e) {
-			return Result.createRestErrorResult(Result.FAILURE, e.getMessage());
 		} catch (XmlPullParserException e) {
 			return Result.createRestErrorResult(Result.FAILURE, e.getMessage());
 		}
