@@ -273,28 +273,34 @@ public class Locker
     public Collection<Track> getTracks() throws LockerException
     {
 
-        return fetchTracks( "", "", "" );
+        return fetchTracks( "", "", "", "" );
     }
 
     public Collection<Track> getTracksForAlbum( int albumId ) throws LockerException
     {
 
-        return fetchTracks( "", "", Integer.toString( albumId ) );
+        return fetchTracks( "", "", Integer.toString( albumId ), "" );
     }
 
     public Collection<Track> getTracksForArtist( int artistId ) throws LockerException
     {
 
-        return fetchTracks( Integer.toString( artistId ), "", "" );
+        return fetchTracks( Integer.toString( artistId ), "", "", "" );
     }
 
     public Collection<Track> getTracksForToken( String token ) throws LockerException
     {
 
-        return fetchTracks( "", token, "" );
+        return fetchTracks( "", token, "", "" );
+    }
+    
+    public Collection<Track> getTracksForPlaylist( int playlistId) throws LockerException
+    {
+
+        return fetchTracks( "", "", "", Integer.toString(playlistId) );
     }
 
-    protected static Collection<Track> fetchTracks( String artistId, String token, String albumId )
+    protected static Collection<Track> fetchTracks( String artistId, String token, String albumId, String playlistId )
             throws LockerException
     {
 
@@ -307,6 +313,8 @@ public class Locker
             params.put( "token", token );
         if ( albumId != "" )
             params.put( "album_id", albumId );
+        if ( playlistId != "")
+            params.put( "playlist_id", playlistId);
         try
         {
             Result result = Caller.getInstance().call( m, params );
@@ -350,4 +358,54 @@ public class Locker
         }
 
     }
+    
+    public Collection<Playlist> getPlaylists() throws LockerException
+    {
+
+        String m = "lockerData";
+        Map<String, String> params = new HashMap<String, String>();
+        params.put( "type", "playlist" );
+        try
+        {
+            Result result = Caller.getInstance().call( m, params );
+            if ( !result.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + result.getErrorMessage() ) );
+            try
+            {
+                Collection<Playlist> playlists = new ArrayList<Playlist>();
+                int event = result.getParser().nextTag();
+                boolean loop = true;
+                while ( loop && event != XmlPullParser.END_DOCUMENT )
+                {
+                    String name = result.getParser().getName();
+                    switch ( event )
+                    {
+                    case XmlPullParser.START_TAG:
+                        if ( name.equals( "item" ) )
+                        {
+                            Playlist p = Playlist.playlistFromResult( result );
+                            if ( p != null )
+                                playlists.add( p );
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if ( name.equals( "playlistList" ) )
+                            loop = false;
+                        break;
+                    }
+                    event = result.getParser().next();
+                }
+                return playlists;
+            }
+            catch ( Exception e )
+            {
+                throw ( new LockerException( "Getting albums failed: " + e.getMessage() ) );
+            }
+        }
+        catch ( IOException e )
+        {
+            throw ( new LockerException( "connection issue" ) );
+        }
+    }
+
 }

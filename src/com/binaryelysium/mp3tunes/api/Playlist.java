@@ -21,6 +21,8 @@ package com.binaryelysium.mp3tunes.api;
 
 import java.util.Collection;
 
+import org.xmlpull.v1.XmlPullParser;
+
 public class Playlist {
 	int mId;
 	String mName;
@@ -29,6 +31,16 @@ public class Playlist {
 	String mDateModified;
 	int mSize;
 	Collection<Track> mTracks;
+	
+	public final static String RANDOM_TRACKS = "RANDOM_TRACKS";
+	public final static int RANDOM_TRACKS_ID = -1;
+	
+    public final static String NEWEST_TRACKS = "NEWEST_TRACKS";
+    public final static int NEWEST_TRACKS_ID = -2;
+    
+    public final static String RECENTLY_PLAYED = "RECENTLY_PLAYED";
+    public final static int RECENTLY_PLAYED_ID = -3;
+
 
 	private Playlist() {}
 	
@@ -42,9 +54,65 @@ public class Playlist {
         mSize = size;
     }
 
-    public static Playlist playlistFromXPP(){
-		return new Playlist();
-	}
+	public static Playlist playlistFromResult( Result result )
+    {
+        try
+        {
+            Playlist p = new Playlist();
+            int event = result.getParser().nextTag();
+            boolean loop = true;
+            while ( loop )
+            {
+                String name = result.getParser().getName();
+                switch ( event )
+                {
+                case XmlPullParser.START_TAG:
+                    if ( name.equals( "playlistId" ) )
+                    {
+                        String id = result.getParser().nextText();
+                        if( id.equals( RANDOM_TRACKS ) )
+                            p.mId = RANDOM_TRACKS_ID;
+                        else if (id.equals( RECENTLY_PLAYED ) )
+                            p.mId = RECENTLY_PLAYED_ID;
+                        else if ( id.equals( NEWEST_TRACKS ))
+                            p.mId = NEWEST_TRACKS_ID;
+                        else
+                            p.mId = Integer.parseInt( id );
+                    }
+                    else if ( name.equals( "playlistTitle" ) )
+                    {
+                        p.mName = result.getParser().nextText();
+                    }
+                    else if ( name.equals( "fileName" ) )
+                    {
+                        p.mFileName = result.getParser().nextText();
+                    }
+                    else if ( name.equals( "fileCount" ) )
+                    {
+                        p.mCount = Integer.parseInt( result.getParser().nextText() );
+                    }
+                    else if ( name.equals( "playlistSize" ) )
+                    {
+                        p.mSize = Integer.parseInt( result.getParser().nextText() );
+                    }
+//                    else if ( name.equals( "dateModified" ) )
+//                    {
+//                        p.mDateModified = result.getParser().nextText();
+//                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    if ( name.equals( "item" ) )
+                        loop = false;
+                    break;
+                }
+                event = result.getParser().next();
+            }
+            return p;
+        }
+        catch ( Exception e )
+        {}
+        return null;
+    }
 	
 	public static Playlist randomTracks()
 	{
