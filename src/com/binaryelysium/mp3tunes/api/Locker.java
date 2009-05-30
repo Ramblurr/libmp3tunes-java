@@ -31,7 +31,7 @@ public class Locker
 {
 
     Session mSession;
-    String mPartnerToken;
+    static String mPartnerToken;
 
     public enum UpdateType
     {
@@ -325,7 +325,7 @@ public class Locker
                     case XmlPullParser.START_TAG:
                         if ( name.equals( "item" ) )
                         {
-                            Track t = Track.trackFromResult( result );
+                            Track t = Track.trackFromResult( result, mPartnerToken );
                             if ( t != null )
                                 tracks.add( t );
                         }
