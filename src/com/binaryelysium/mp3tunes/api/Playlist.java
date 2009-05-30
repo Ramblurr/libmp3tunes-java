@@ -32,7 +32,17 @@ public class Playlist {
 
 	private Playlist() {}
 	
-	public static Playlist playlistFromXPP(){
+	public Playlist( int id, String name, String fileName, int count, String dateModified, int size )
+    {
+        mId = id;
+        mName = name;
+        mFileName = fileName;
+        mCount = count;
+        mDateModified = dateModified;
+        mSize = size;
+    }
+
+    public static Playlist playlistFromXPP(){
 		return new Playlist();
 	}
 	
