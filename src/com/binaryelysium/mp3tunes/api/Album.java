@@ -38,8 +38,24 @@ public class Album {
 
 	private Album() {
 	}
+	
+	public Album( int id, String name, String year, int trackCount, int size, String releaseDate,
+            String purhaseDate, int hasArt, int artistId, String artistName )
+    {
+        super();
+        mId = id;
+        mName = name;
+        mYear = year;
+        mTrackCount = trackCount;
+        mSize = size;
+        mReleaseDate = releaseDate;
+        mPurhaseDate = purhaseDate;
+        mHasArt = hasArt;
+        mArtistId = artistId;
+        mArtistName = artistName;
+    }
 
-	public int getId() {
+    public int getId() {
 		return mId;
 	}
 
