@@ -54,22 +54,22 @@ public class Playlist {
         mSize = size;
     }
 
-	public static Playlist playlistFromResult( Result result )
+	public static Playlist playlistFromResult( RestResult restResult )
     {
         try
         {
             Playlist p = new Playlist();
-            int event = result.getParser().nextTag();
+            int event = restResult.getParser().nextTag();
             boolean loop = true;
             while ( loop )
             {
-                String name = result.getParser().getName();
+                String name = restResult.getParser().getName();
                 switch ( event )
                 {
                 case XmlPullParser.START_TAG:
                     if ( name.equals( "playlistId" ) )
                     {
-                        String id = result.getParser().nextText();
+                        String id = restResult.getParser().nextText();
                         if( id.equals( RANDOM_TRACKS ) )
                             p.mId = RANDOM_TRACKS_ID;
                         else if (id.equals( RECENTLY_PLAYED ) )
@@ -81,19 +81,19 @@ public class Playlist {
                     }
                     else if ( name.equals( "playlistTitle" ) )
                     {
-                        p.mName = result.getParser().nextText();
+                        p.mName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "fileName" ) )
                     {
-                        p.mFileName = result.getParser().nextText();
+                        p.mFileName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "fileCount" ) )
                     {
-                        p.mCount = Integer.parseInt( result.getParser().nextText() );
+                        p.mCount = Integer.parseInt( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "playlistSize" ) )
                     {
-                        p.mSize = Integer.parseInt( result.getParser().nextText() );
+                        p.mSize = Integer.parseInt( restResult.getParser().nextText() );
                     }
 //                    else if ( name.equals( "dateModified" ) )
 //                    {
@@ -105,7 +105,7 @@ public class Playlist {
                         loop = false;
                     break;
                 }
-                event = result.getParser().next();
+                event = restResult.getParser().next();
             }
             return p;
         }

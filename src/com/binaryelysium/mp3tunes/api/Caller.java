@@ -111,7 +111,7 @@ public class Caller {
 		mSession = session;
 	}
 
-	public Result call(String method, String... params) throws IOException {
+	public RestResult call(String method, String... params) throws IOException {
 		return call(method, StringUtilities.map(params));
 	}
 
@@ -131,7 +131,7 @@ public class Caller {
 	 * @return the result of the operation
 	 * @throws XmlPullParserException
 	 */
-	public Result call(String method, Map<String, String> params) throws IOException {
+	public RestResult call(String method, Map<String, String> params) throws IOException {
 
 		// create new Map in case params is an immutable Map
 		params = new HashMap<String, String>(params);
@@ -180,11 +180,11 @@ public class Caller {
 					|| responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
 				httpInput = urlConnection.getErrorStream();
 			} else if (responseCode != HttpURLConnection.HTTP_OK) {
-				return Result.createHttpErrorResult(responseCode, urlConnection
+				return RestResult.createHttpErrorResult(responseCode, urlConnection
 						.getResponseMessage());
 			} else if (errorHeader != null) {
 				String errorMsg = urlConnection.getHeaderField("X-MP3tunes-ErrorString");
-				return Result.createRestErrorResult(Integer.parseInt(errorHeader), errorMsg);
+				return RestResult.createRestErrorResult(Integer.parseInt(errorHeader), errorMsg);
 			} else {
 				httpInput = urlConnection.getInputStream();
 			}
@@ -208,9 +208,9 @@ public class Caller {
 			} else {
 				xpp.setInput(httpInput, "utf-8");
 			}
-			return Result.createOkResult(xpp);
+			return RestResult.createOkResult(xpp);
 		} catch (XmlPullParserException e) {
-			return Result.createRestErrorResult(Result.FAILURE, e.getMessage());
+			return RestResult.createRestErrorResult(RestResult.FAILURE, e.getMessage());
 		}
 	}
 

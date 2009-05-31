@@ -33,29 +33,29 @@ public class Session {
 	public Session() {
 	}
 	
-	public static Session sessionFromResult(Result result) throws LockerException
+	public static Session sessionFromResult(RestResult restResult) throws LockerException
 	{
 		try {
-			if (result.getParser() == null)
+			if (restResult.getParser() == null)
 				return null;
 
-			if (!result.getParser().getName().equals("mp3tunes"))
+			if (!restResult.getParser().getName().equals("mp3tunes"))
 				return null;
 			Session s = new Session();
-			int event = result.getParser().nextTag();
+			int event = restResult.getParser().nextTag();
 			boolean loop = true;
 			while (loop && event != XmlPullParser.END_DOCUMENT) {
-				String name = result.getParser().getName();
+				String name = restResult.getParser().getName();
 				switch (event) {
 				case XmlPullParser.START_TAG:
 					if (name.equals("status")) {
-						String status = result.getParser().nextText();
+						String status = restResult.getParser().nextText();
 						if(status.equals("0")) // authentication failed
 						    throw (new LockerException("auth failure"));
 					} else if (name.equals("username")) {
-						s.mUsername = result.getParser().nextText();
+						s.mUsername = restResult.getParser().nextText();
 					} else if (name.equals("session_id")) {
-						s.mSessionId = result.getParser().nextText();
+						s.mSessionId = restResult.getParser().nextText();
 					}
 					break;
 				case XmlPullParser.END_TAG:
@@ -64,7 +64,7 @@ public class Session {
 						continue;
 					}
 				}
-				event = result.getParser().nextTag();
+				event = restResult.getParser().nextTag();
 			}
 			return s;
 		} catch (Exception e) {

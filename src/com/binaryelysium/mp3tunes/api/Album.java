@@ -107,37 +107,37 @@ public class Album {
 		return mTracks;
 	}
 
-	public static Album albumFromResult(Result result) {
+	public static Album albumFromResult(RestResult restResult) {
 		try {
 			Album a = new Album();
-			int event = result.getParser().nextTag();
+			int event = restResult.getParser().nextTag();
 			boolean loop = true;
 			while (loop) {
-				String name = result.getParser().getName();
+				String name = restResult.getParser().getName();
 				switch (event) {
 				case XmlPullParser.START_TAG:
 					if (name.equals("albumId")) {
-						a.mId = Integer.parseInt(result.getParser().nextText());
+						a.mId = Integer.parseInt(restResult.getParser().nextText());
 					} else if (name.equals("albumSize")) {
-						a.mSize = Integer.parseInt(result.getParser()
+						a.mSize = Integer.parseInt(restResult.getParser()
 								.nextText());
 					} else if (name.equals("albumTitle")) {
-						a.mName = result.getParser().nextText();
+						a.mName = restResult.getParser().nextText();
 					} else if (name.equals("artistId")) {
-						a.mArtistId = Integer.parseInt(result.getParser()
+						a.mArtistId = Integer.parseInt(restResult.getParser()
 								.nextText());
 					} else if (name.equals("trackCount")) {
-						a.mTrackCount = Integer.parseInt(result.getParser()
+						a.mTrackCount = Integer.parseInt(restResult.getParser()
 								.nextText());
 					} else if (name.equals("artistName")) {
-						a.mArtistName = result.getParser().nextText();
+						a.mArtistName = restResult.getParser().nextText();
 					} else if (name.equals("hasArt")) {
-						a.mHasArt = Integer.parseInt(result.getParser()
+						a.mHasArt = Integer.parseInt(restResult.getParser()
 								.nextText());
 					} else if (name.equals("purchaseDate")) {
-						a.mPurhaseDate = result.getParser().nextText();
+						a.mPurhaseDate = restResult.getParser().nextText();
 					} else if (name.equals("releaseDate")) {
-						a.mReleaseDate = result.getParser().nextText();
+						a.mReleaseDate = restResult.getParser().nextText();
 					}
 					break;
 				case XmlPullParser.END_TAG:
@@ -145,7 +145,7 @@ public class Album {
 						loop = false;
 					break;
 				}
-				event = result.getParser().next();
+				event = restResult.getParser().next();
 			}
 			return a;
 		} catch (Exception e) {

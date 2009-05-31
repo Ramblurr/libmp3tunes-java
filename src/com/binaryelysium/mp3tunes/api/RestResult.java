@@ -24,7 +24,12 @@ import java.io.IOException;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-public class Result {
+/**
+ * 
+ * Represents the results of an HTTP call to the mp3tunes REST webservice.
+ *
+ */
+public class RestResult {
 	public enum Status {
 		OK, FAILED
 	}
@@ -39,38 +44,38 @@ public class Result {
 
 	private XmlPullParser xmlParser;
 
-	public Result(XmlPullParser xpp) {
+	public RestResult(XmlPullParser xpp) {
 		try {
 			xpp.nextTag();
 			xpp.require(XmlPullParser.START_TAG, null, "mp3tunes"); // this will fail if something went wrong
 			this.status = Status.OK;
 			this.xmlParser = xpp;
 		} catch (XmlPullParserException e) {
-			this.errorCode = Result.FAILURE;
+			this.errorCode = RestResult.FAILURE;
 			this.errorMessage = e.getMessage();
 		} catch (IOException e) {
-			this.errorCode = Result.FAILURE;
+			this.errorCode = RestResult.FAILURE;
 			this.errorMessage = e.getMessage();
 		}
 	}
 
-	public Result(String errorMessage) {
+	public RestResult(String errorMessage) {
 		this.status = Status.FAILED;
 		this.errorMessage = errorMessage;
 	}
 
-	static Result createOkResult(XmlPullParser xpp) {
-		return new Result(xpp);
+	static RestResult createOkResult(XmlPullParser xpp) {
+		return new RestResult(xpp);
 	}
 
-	static Result createHttpErrorResult(int httpErrorCode, String errorMessage) {
-		Result r = new Result(errorMessage);
+	static RestResult createHttpErrorResult(int httpErrorCode, String errorMessage) {
+		RestResult r = new RestResult(errorMessage);
 		r.httpErrorCode = httpErrorCode;
 		return r;
 	}
 
-	static Result createRestErrorResult(int errorCode, String errorMessage) {
-		Result r = new Result(errorMessage);
+	static RestResult createRestErrorResult(int errorCode, String errorMessage) {
+		RestResult r = new RestResult(errorMessage);
 		r.errorCode = errorCode;
 		return r;
 	}

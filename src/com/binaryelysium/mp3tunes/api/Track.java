@@ -61,79 +61,79 @@ public class Track
         mAlbumArt = cover_url;
     }
 
-    public static Track trackFromResult( Result result, String partner_token )
+    public static Track trackFromResult( RestResult restResult, String partner_token )
     {
         try
         {
             Track t = new Track();
-            int event = result.getParser().nextTag();
+            int event = restResult.getParser().nextTag();
             boolean loop = true;
             while ( loop )
             {
-                String name = result.getParser().getName();
+                String name = restResult.getParser().getName();
                 switch ( event )
                 {
                 case XmlPullParser.START_TAG:
                     if ( name.equals( "trackId" ) )
                     {
-                        t.mId = Integer.parseInt( result.getParser().nextText() );
+                        t.mId = Integer.parseInt( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "trackFileSize" ) )
                     {
-                        t.mFileSize = Integer.parseInt( result.getParser().nextText() );
+                        t.mFileSize = Integer.parseInt( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "trackTitle" ) )
                     {
-                        t.mTitle = result.getParser().nextText();
+                        t.mTitle = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "trackFileName" ) )
                     {
-                        t.mFileName = result.getParser().nextText();
+                        t.mFileName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "trackFileKey" ) )
                     {
-                        t.mFileKey = result.getParser().nextText();
+                        t.mFileKey = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "trackNumber" ) )
                     {
-                        t.mNumber = Integer.parseInt( result.getParser().nextText() );
+                        t.mNumber = Integer.parseInt( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "trackLength" ) )
                     {
-                        t.mDuration = Double.parseDouble( result.getParser().nextText() );
+                        t.mDuration = Double.parseDouble( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "albumTitle" ) )
                     {
-                        t.mAlbumTitle = result.getParser().nextText();
+                        t.mAlbumTitle = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "albumYear" ) )
                     {
-                        t.mAlbumYear = result.getParser().nextText();
+                        t.mAlbumYear = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "albumId" ) )
                     {
-                        t.mAlbumId = Integer.parseInt( result.getParser().nextText() );
+                        t.mAlbumId = Integer.parseInt( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "artistId" ) )
                     {
-                        t.mArtistId = Integer.parseInt( result.getParser().nextText() );
+                        t.mArtistId = Integer.parseInt( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "artistName" ) )
                     {
-                        t.mArtistName = result.getParser().nextText();
+                        t.mArtistName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "albumArtURL" ) )
                     {
-                        t.mAlbumArt = result.getParser().nextText();
+                        t.mAlbumArt = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "downloadURL" ) )
                     {
-                        t.mDownloadUrl = result.getParser().nextText();
+                        t.mDownloadUrl = restResult.getParser().nextText();
                         t.mDownloadUrl += partner_token;
                     }
                     else if ( name.equals( "playURL" ) )
                     {
-                        t.mPlayUrl = result.getParser().nextText();
+                        t.mPlayUrl = restResult.getParser().nextText();
                         t.mPlayUrl += partner_token;
                     }
                     break;
@@ -142,7 +142,7 @@ public class Track
                         loop = false;
                     break;
                 }
-                event = result.getParser().next();
+                event = restResult.getParser().next();
             }
             return t;
         }

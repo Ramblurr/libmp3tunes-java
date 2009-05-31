@@ -43,8 +43,8 @@ public class Authenticator {
 		params.put("partner_token", token);
 		params.put("password", password);
 		Caller.getInstance().setApiRootUrl(Caller.API_LOGIN);
-		Result result = Caller.getInstance().call(m, params);
+		RestResult restResult = Caller.getInstance().call(m, params);
 		Caller.getInstance().setApiRootUrl(Caller.API_GENERAL);
-		return Session.sessionFromResult(result);
+		return Session.sessionFromResult(restResult);
 	}
 }

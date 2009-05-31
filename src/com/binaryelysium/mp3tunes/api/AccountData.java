@@ -60,38 +60,38 @@ public class AccountData
 
     }
 
-    private Subscription subscriptionFromResult( Result result )
+    private Subscription subscriptionFromResult( RestResult restResult )
     {
 
         try
         {
-            if ( !result.getParser().getName().equals( "item" ) )
+            if ( !restResult.getParser().getName().equals( "item" ) )
                 return null;
 
             Subscription s = new Subscription();
-            int event = result.getParser().nextTag();
+            int event = restResult.getParser().nextTag();
             boolean loop = true;
             while ( loop )
             {
-                String name = result.getParser().getName();
+                String name = restResult.getParser().getName();
                 switch ( event )
                 {
                 case XmlPullParser.START_TAG:
                     if ( name.equals( "name" ) )
                     {
-                        s.mName = result.getParser().nextText();
+                        s.mName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "expireDate" ) )
                     {
-                        s.mExpireDate = result.getParser().nextText();
+                        s.mExpireDate = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "description" ) )
                     {
-                        s.mDescription = result.getParser().nextText();
+                        s.mDescription = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "activateDate" ) )
                     {
-                        s.mActivateDate = result.getParser().nextText();
+                        s.mActivateDate = restResult.getParser().nextText();
                     }
                     break;
                 case XmlPullParser.END_TAG:
@@ -99,7 +99,7 @@ public class AccountData
                         loop = false;
                     break;
                 }
-                event = result.getParser().next();
+                event = restResult.getParser().next();
             }
             return s;
         }
@@ -109,63 +109,63 @@ public class AccountData
         return null;
     }
 
-    public static AccountData accountDataFromResult( Result result )
+    public static AccountData accountDataFromResult( RestResult restResult )
     {
 
         try
         {
-            result.getParser().nextTag();
-            if ( !result.getParser().getName().equals( "user" ) )
+            restResult.getParser().nextTag();
+            if ( !restResult.getParser().getName().equals( "user" ) )
                 return null;
 
             AccountData d = new AccountData();
-            int event = result.getParser().nextTag();
+            int event = restResult.getParser().nextTag();
             boolean loop = true;
             while ( loop )
             {
-                String name = result.getParser().getName();
+                String name = restResult.getParser().getName();
                 switch ( event )
                 {
                 case XmlPullParser.START_TAG:
                     if ( name.equals( "email" ) )
                     {
-                        d.mEmail = result.getParser().nextText();
+                        d.mEmail = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "nickName" ) )
                     {
-                        d.mNickName = result.getParser().nextText();
+                        d.mNickName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "firstName" ) )
                     {
-                        d.mFirstName = result.getParser().nextText();
+                        d.mFirstName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "lastName" ) )
                     {
-                        d.mLastName = result.getParser().nextText();
+                        d.mLastName = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "maxLockerSize" ) )
                     {
-                        d.mMaxLockerSize = Long.parseLong( result.getParser().nextText() );
+                        d.mMaxLockerSize = Long.parseLong( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "currentLockerSize" ) )
                     {
-                        d.mCurrentLockerSize = Long.parseLong( result.getParser().nextText() );
+                        d.mCurrentLockerSize = Long.parseLong( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "maxFileSize" ) )
                     {
-                        d.mMaxFileSize = Long.parseLong( result.getParser().nextText() );
+                        d.mMaxFileSize = Long.parseLong( restResult.getParser().nextText() );
                     }
                     else if ( name.equals( "lockerType" ) )
                     {
-                        d.mLockerType = result.getParser().nextText();
+                        d.mLockerType = restResult.getParser().nextText();
                     }
                     else if ( name.equals( "expired" ) )
                     {
-                        d.mExpired = result.getParser().nextText().equals( "1" );
+                        d.mExpired = restResult.getParser().nextText().equals( "1" );
                     }
                     else if ( name.equals( "item" ) )
                     {
-                        d.mSubscriptions.add( d.subscriptionFromResult( result ) );
+                        d.mSubscriptions.add( d.subscriptionFromResult( restResult ) );
                     }
                     break;
                 case XmlPullParser.END_TAG:
@@ -173,7 +173,7 @@ public class AccountData
                         loop = false;
                     break;
                 }
-                event = result.getParser().next();
+                event = restResult.getParser().next();
             }
             return d;
         }
@@ -190,10 +190,10 @@ public class AccountData
         Map<String, String> params = new HashMap<String, String>();
         try
         {
-            Result result = Caller.getInstance().call( m, params );
-            if ( !result.isSuccessful() )
-                throw ( new LockerException( "Call Failed: " + result.getErrorMessage() ) );
-            return AccountData.accountDataFromResult( result );
+            RestResult restResult = Caller.getInstance().call( m, params );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
+            return AccountData.accountDataFromResult( restResult );
         }
         catch ( IOException e )
         {

@@ -72,33 +72,33 @@ public class Locker
         params.put( "type", type.toString() );
         try
         {
-            Result result = Caller.getInstance().call( m, params );
+            RestResult restResult = Caller.getInstance().call( m, params );
 
-            if ( !result.isSuccessful() )
-                throw ( new LockerException( "Call Failed: " + result.getErrorMessage() ) );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
             try
             {
-                int event = result.getParser().nextTag();
+                int event = restResult.getParser().nextTag();
 
                 while ( event != XmlPullParser.END_DOCUMENT )
                 {
-                    String name = result.getParser().getName();
+                    String name = restResult.getParser().getName();
                     switch ( event )
                     {
                     case XmlPullParser.START_TAG:
                         if ( name.equals( "status" ) )
                         {
-                            String stat = result.getParser().nextText();
+                            String stat = restResult.getParser().nextText();
                             if ( !stat.equals( "1" ) )
                                 throw ( new LockerException( "Getting last update failed" ) );
                         }
                         else if ( name.equals( "timestamp" ) )
                         {
-                            return Long.parseLong( result.getParser().nextText() );
+                            return Long.parseLong( restResult.getParser().nextText() );
                         }
                         break;
                     }
-                    event = result.getParser().next();
+                    event = restResult.getParser().next();
                 }
             }
             catch ( Exception e )
@@ -141,25 +141,24 @@ public class Locker
         try
         {
             System.out.println("Making GET ARTISTS call");
-            Result result = Caller.getInstance().call( m, params );
+            RestResult restResult = Caller.getInstance().call( m, params );
             System.out.println("BACK FROM GET ARTISTS call");
-            if ( !result.isSuccessful() )
-                throw ( new LockerException( "Call Failed: " + result.getErrorMessage() ) );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
             try
             {
                 Collection<Artist> artists = new ArrayList<Artist>();
-                int event = result.getParser().nextTag();
+                int event = restResult.getParser().nextTag();
                 boolean loop = true;
                 while ( loop && event != XmlPullParser.END_DOCUMENT )
                 {
-                    System.out.println( "Looping for artists..." );
-                    String name = result.getParser().getName();
+                    String name = restResult.getParser().getName();
                     switch ( event )
                     {
                     case XmlPullParser.START_TAG:
                         if ( name.equals( "item" ) )
                         {
-                            Artist a = Artist.artistFromResult( result );
+                            Artist a = Artist.artistFromResult( restResult );
                             if ( a != null )
                                 artists.add( a );
                         }
@@ -169,7 +168,7 @@ public class Locker
                             loop = false;
                         break;
                     }
-                    event = result.getParser().next();
+                    event = restResult.getParser().next();
                 }
                 return artists;
             }
@@ -228,23 +227,23 @@ public class Locker
             params.put( "album_id", albumId );
         try
         {
-            Result result = Caller.getInstance().call( m, params );
-            if ( !result.isSuccessful() )
-                throw ( new LockerException( "Call Failed: " + result.getErrorMessage() ) );
+            RestResult restResult = Caller.getInstance().call( m, params );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
             try
             {
                 Collection<Album> albums = new ArrayList<Album>();
-                int event = result.getParser().nextTag();
+                int event = restResult.getParser().nextTag();
                 boolean loop = true;
                 while ( loop && event != XmlPullParser.END_DOCUMENT )
                 {
-                    String name = result.getParser().getName();
+                    String name = restResult.getParser().getName();
                     switch ( event )
                     {
                     case XmlPullParser.START_TAG:
                         if ( name.equals( "item" ) )
                         {
-                            Album a = Album.albumFromResult( result );
+                            Album a = Album.albumFromResult( restResult );
                             if ( a != null )
                                 albums.add( a );
                         }
@@ -254,7 +253,7 @@ public class Locker
                             loop = false;
                         break;
                     }
-                    event = result.getParser().next();
+                    event = restResult.getParser().next();
                 }
                 return albums;
             }
@@ -317,23 +316,23 @@ public class Locker
             params.put( "playlist_id", playlistId);
         try
         {
-            Result result = Caller.getInstance().call( m, params );
-            if ( !result.isSuccessful() )
-                throw ( new LockerException( "Call Failed: " + result.getErrorMessage() ) );
+            RestResult restResult = Caller.getInstance().call( m, params );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
             try
             {
                 Collection<Track> tracks = new ArrayList<Track>();
-                int event = result.getParser().nextTag();
+                int event = restResult.getParser().nextTag();
                 boolean loop = true;
                 while ( loop && event != XmlPullParser.END_DOCUMENT )
                 {
-                    String name = result.getParser().getName();
+                    String name = restResult.getParser().getName();
                     switch ( event )
                     {
                     case XmlPullParser.START_TAG:
                         if ( name.equals( "item" ) )
                         {
-                            Track t = Track.trackFromResult( result, mPartnerToken );
+                            Track t = Track.trackFromResult( restResult, mPartnerToken );
                             if ( t != null )
                                 tracks.add( t );
                         }
@@ -343,7 +342,7 @@ public class Locker
                             loop = false;
                         break;
                     }
-                    event = result.getParser().next();
+                    event = restResult.getParser().next();
                 }
                 return tracks;
             }
@@ -367,23 +366,23 @@ public class Locker
         params.put( "type", "playlist" );
         try
         {
-            Result result = Caller.getInstance().call( m, params );
-            if ( !result.isSuccessful() )
-                throw ( new LockerException( "Call Failed: " + result.getErrorMessage() ) );
+            RestResult restResult = Caller.getInstance().call( m, params );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
             try
             {
                 Collection<Playlist> playlists = new ArrayList<Playlist>();
-                int event = result.getParser().nextTag();
+                int event = restResult.getParser().nextTag();
                 boolean loop = true;
                 while ( loop && event != XmlPullParser.END_DOCUMENT )
                 {
-                    String name = result.getParser().getName();
+                    String name = restResult.getParser().getName();
                     switch ( event )
                     {
                     case XmlPullParser.START_TAG:
                         if ( name.equals( "item" ) )
                         {
-                            Playlist p = Playlist.playlistFromResult( result );
+                            Playlist p = Playlist.playlistFromResult( restResult );
                             if ( p != null )
                                 playlists.add( p );
                         }
@@ -393,7 +392,7 @@ public class Locker
                             loop = false;
                         break;
                     }
-                    event = result.getParser().next();
+                    event = restResult.getParser().next();
                 }
                 return playlists;
             }
