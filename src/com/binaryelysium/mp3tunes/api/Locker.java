@@ -146,7 +146,7 @@ public class Locker
         return (SetResult<Artist>) fetchArtists( "", new SetQuery( count, set ) );
     }
     
-    private DataResult<Artist> fetchArtists( String artistId, SetQuery setQuery ) throws LockerException
+    private static DataResult<Artist> fetchArtists( String artistId, SetQuery setQuery ) throws LockerException
     {
         String m = "lockerData";
         Map<String, String> params = new HashMap<String, String>();
@@ -182,7 +182,7 @@ public class Locker
         }
     }
 
-    private Collection<Artist> parseArtists( RestResult restResult ) throws LockerException
+    private static Collection<Artist> parseArtists( RestResult restResult ) throws LockerException
     {
             try
             {
@@ -218,85 +218,43 @@ public class Locker
 
 
     }
-    
-    private <E> SetResult<E> parseSetSummary(RestResult restResult)
-    {
-        try
-        {
-            SetResult<E> result = new SetResult<E>();
-            int event = restResult.getParser().nextTag();
-            boolean loop = true;
-            while ( loop && event != XmlPullParser.END_DOCUMENT )
-            {
-                String name = restResult.getParser().getName();
-                switch ( event )
-                {
-                case XmlPullParser.START_TAG:
-                    if ( name.equals( "type" ) )
-                    {
-                        result.setType( restResult.getParser().nextText());
-                    }
-                    else if ( name.equals( "totalResults" ) )
-                    {
-                        result.setTotalResults( Integer.parseInt(restResult.getParser().nextText() ) );
-                    }
-                    else if ( name.equals( "set" ) )
-                    {
-                        result.setSet( Integer.parseInt(restResult.getParser().nextText() ) );
-                    }
-                    else if ( name.equals( "count" ) )
-                    {
-                        result.setCount( Integer.parseInt(restResult.getParser().nextText() ) );
-                    }
-                    else if ( name.equals( "totalResultSets" ) )
-                    {
-                        result.setTotalResultSets( Integer.parseInt(restResult.getParser().nextText() ) );
-                    }
-                    break;
-                case XmlPullParser.END_TAG:
-                    if ( name.equals( "summary" ) )
-                        loop = false;
-                    break;
-                }
-                event = restResult.getParser().next();
-            }
-            return result;
-        }
-        catch ( Exception e )
-        {
-            throw ( new LockerException( "Getting set summary failed: " + e.getMessage() ) );
-        }
-    }
 
     public Album getAlbum( int id ) throws NoSuchEntryException
     {
 
-        Collection<Album> list = fetchAlbums( "", "", Integer.toString( id ) );
+        Collection<Album> list = fetchAlbums( "", "", Integer.toString( id ), null ).getData();
         if ( list.size() == 1 )
             return list.iterator().next();
         else
             throw ( new NoSuchEntryException( "No such album w/ id " + id ) );
     }
 
-    public Collection<Album> getAlbumsForArtist( int id ) throws LockerException
+    public DataResult<Album> getAlbumsForArtist( int id ) throws LockerException
     {
 
-        return fetchAlbums( Integer.toString( id ), "", "" );
+        return fetchAlbums( Integer.toString( id ), "", "", null );
     }
 
-    public Collection<Album> getAlbumsforToken( String token ) throws LockerException
+    public DataResult<Album> getAlbumsforToken( String token ) throws LockerException
     {
 
-        return fetchAlbums( "", token, "" );
+        return fetchAlbums( "", token, "", null );
     }
-
-    public Collection<Album> getAlbums() throws LockerException
+    
+    public SetResult<Album> getAlbumsSet(int count, int set) throws LockerException
     {
 
-        return fetchAlbums( "", "", "" );
+        return (SetResult<Album>) fetchAlbums( "", "", "", new SetQuery( count, set ) );
     }
 
-    protected static Collection<Album> fetchAlbums( String artistId, String token, String albumId )
+    public DataResult<Album> getAlbums() throws LockerException
+    {
+
+        return fetchAlbums( "", "", "", null );
+    }
+    
+
+    protected static DataResult<Album> fetchAlbums( String artistId, String token, String albumId, SetQuery setQuery )
             throws LockerException
     {
 
@@ -309,42 +267,26 @@ public class Locker
             params.put( "token", token );
         if ( albumId != "" )
             params.put( "album_id", albumId );
+        if ( setQuery != null )
+        {
+            params.put( "count", setQuery.count );
+            params.put( "set", setQuery.set );
+        }
         try
         {
             RestResult restResult = Caller.getInstance().call( m, params );
             if ( !restResult.isSuccessful() )
                 throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
-            try
-            {
-                Collection<Album> albums = new ArrayList<Album>();
-                int event = restResult.getParser().nextTag();
-                boolean loop = true;
-                while ( loop && event != XmlPullParser.END_DOCUMENT )
-                {
-                    String name = restResult.getParser().getName();
-                    switch ( event )
-                    {
-                    case XmlPullParser.START_TAG:
-                        if ( name.equals( "item" ) )
-                        {
-                            Album a = Album.albumFromResult( restResult );
-                            if ( a != null )
-                                albums.add( a );
-                        }
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if ( name.equals( "albumList" ) )
-                            loop = false;
-                        break;
-                    }
-                    event = restResult.getParser().next();
-                }
-                return albums;
-            }
-            catch ( Exception e )
-            {
-                throw ( new LockerException( "Getting albums failed: " + e.getMessage() ) );
-            }
+            
+            DataResult<Album> results = null;
+            if(setQuery != null )
+                results = parseSetSummary(restResult);
+            
+            Collection<Album> albums = parseAlbums(restResult);
+            if(results == null)
+                results = new DataResult<Album>("album", albums.size());
+            results.setData( albums );
+            return results;
         }
         catch ( IOException e )
         {
@@ -352,38 +294,78 @@ public class Locker
         }
 
     }
-
-    public Collection<Track> getTracks() throws LockerException
+    
+    private static Collection<Album> parseAlbums( RestResult restResult ) throws LockerException
     {
-
-        return fetchTracks( "", "", "", "" );
+        try
+        {
+            Collection<Album> albums = new ArrayList<Album>();
+            int event = restResult.getParser().nextTag();
+            boolean loop = true;
+            while ( loop && event != XmlPullParser.END_DOCUMENT )
+            {
+                String name = restResult.getParser().getName();
+                switch ( event )
+                {
+                case XmlPullParser.START_TAG:
+                    if ( name.equals( "item" ) )
+                    {
+                        Album a = Album.albumFromResult( restResult );
+                        if ( a != null )
+                            albums.add( a );
+                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    if ( name.equals( "albumList" ) )
+                        loop = false;
+                    break;
+                }
+                event = restResult.getParser().next();
+            }
+            return albums;
+        }
+        catch ( Exception e )
+        {
+            throw ( new LockerException( "Getting albums failed: " + e.getMessage() ) );
+        }
     }
 
-    public Collection<Track> getTracksForAlbum( int albumId ) throws LockerException
+    public DataResult<Track> getTracks() throws LockerException
     {
 
-        return fetchTracks( "", "", Integer.toString( albumId ), "" );
+        return fetchTracks( "", "", "", "", null );
     }
 
-    public Collection<Track> getTracksForArtist( int artistId ) throws LockerException
+    public DataResult<Track> getTracksForAlbum( int albumId ) throws LockerException
     {
 
-        return fetchTracks( Integer.toString( artistId ), "", "", "" );
+        return fetchTracks( "", "", Integer.toString( albumId ), "", null );
     }
 
-    public Collection<Track> getTracksForToken( String token ) throws LockerException
+    public DataResult<Track> getTracksForArtist( int artistId ) throws LockerException
     {
 
-        return fetchTracks( "", token, "", "" );
+        return fetchTracks( Integer.toString( artistId ), "", "", "", null );
+    }
+
+    public DataResult<Track> getTracksForToken( String token ) throws LockerException
+    {
+
+        return fetchTracks( "", token, "", "", null );
     }
     
-    public Collection<Track> getTracksForPlaylist( int playlistId) throws LockerException
+    public DataResult<Track> getTracksForPlaylist( int playlistId) throws LockerException
     {
 
-        return fetchTracks( "", "", "", Integer.toString(playlistId) );
+        return fetchTracks( "", "", "", Integer.toString(playlistId), null );
+    }
+    
+    public SetResult<Track> getTracksSet( int count, int set )
+    {
+        return ( SetResult<Track> ) fetchTracks( "", "", "", "", new SetQuery( count, set ) );
     }
 
-    protected static Collection<Track> fetchTracks( String artistId, String token, String albumId, String playlistId )
+    protected static DataResult<Track> fetchTracks( String artistId, String token, String albumId, String playlistId, SetQuery setQuery )
             throws LockerException
     {
 
@@ -398,48 +380,71 @@ public class Locker
             params.put( "album_id", albumId );
         if ( playlistId != "")
             params.put( "playlist_id", playlistId);
+        if ( setQuery != null )
+        {
+            params.put( "count", setQuery.count );
+            params.put( "set", setQuery.set );
+        }
         try
         {
             RestResult restResult = Caller.getInstance().call( m, params );
             if ( !restResult.isSuccessful() )
                 throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
-            try
-            {
-                Collection<Track> tracks = new ArrayList<Track>();
-                int event = restResult.getParser().nextTag();
-                boolean loop = true;
-                while ( loop && event != XmlPullParser.END_DOCUMENT )
-                {
-                    String name = restResult.getParser().getName();
-                    switch ( event )
-                    {
-                    case XmlPullParser.START_TAG:
-                        if ( name.equals( "item" ) )
-                        {
-                            Track t = Track.trackFromResult( restResult, mPartnerToken );
-                            if ( t != null )
-                                tracks.add( t );
-                        }
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if ( name.equals( "trackList" ) )
-                            loop = false;
-                        break;
-                    }
-                    event = restResult.getParser().next();
-                }
-                return tracks;
-            }
-            catch ( Exception e )
-            {
-                throw ( new LockerException( "Getting albums failed: " + e.getMessage() ) );
-            }
+            
+            //NOTE: when set and type=track are passed the tracklist comes BEFORE the set summary
+            // Hence why this parseTracks call is before the parseSetSummary
+            Collection<Track> tracks = parseTracks(restResult);
+            
+            DataResult<Track> results = null;
+            if(setQuery != null )
+                results = parseSetSummary(restResult);
+            
+            
+            if(results == null)
+                results = new DataResult<Track>("track", tracks.size());
+            results.setData( tracks );
+            return results;
         }
         catch ( IOException e )
         {
             throw ( new LockerException( "connection issue" ) );
         }
 
+    }
+    
+    private static Collection<Track> parseTracks( RestResult restResult ) throws LockerException
+    {
+        try
+        {
+            Collection<Track> tracks = new ArrayList<Track>();
+            int event = restResult.getParser().nextTag();
+            boolean loop = true;
+            while ( loop && event != XmlPullParser.END_DOCUMENT )
+            {
+                String name = restResult.getParser().getName();
+                switch ( event )
+                {
+                case XmlPullParser.START_TAG:
+                    if ( name.equals( "item" ) )
+                    {
+                        Track t = Track.trackFromResult( restResult, mPartnerToken );
+                        if ( t != null )
+                            tracks.add( t );
+                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    if ( name.equals( "trackList" ) )
+                        loop = false;
+                    break;
+                }
+                event = restResult.getParser().next();
+            }
+            return tracks;
+        }
+        catch ( Exception e )
+        {
+            throw ( new LockerException( "Getting albums failed: " + e.getMessage() ) );
+        }
     }
     
     public Collection<Playlist> getPlaylists() throws LockerException
@@ -488,6 +493,55 @@ public class Locker
         catch ( IOException e )
         {
             throw ( new LockerException( "connection issue" ) );
+        }
+    }
+    
+    private static <E> SetResult<E> parseSetSummary(RestResult restResult)
+    {
+        try
+        {
+            SetResult<E> result = new SetResult<E>();
+            int event = restResult.getParser().nextTag();
+            boolean loop = true;
+            while ( loop && event != XmlPullParser.END_DOCUMENT )
+            {
+                String name = restResult.getParser().getName();
+                switch ( event )
+                {
+                case XmlPullParser.START_TAG:
+                    if ( name.equals( "type" ) )
+                    {
+                        result.setType( restResult.getParser().nextText());
+                    }
+                    else if ( name.equals( "totalResults" ) )
+                    {
+                        result.setTotalResults( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "set" ) )
+                    {
+                        result.setSet( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "count" ) )
+                    {
+                        result.setCount( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "totalResultSets" ) )
+                    {
+                        result.setTotalResultSets( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    if ( name.equals( "summary" ) )
+                        loop = false;
+                    break;
+                }
+                event = restResult.getParser().next();
+            }
+            return result;
+        }
+        catch ( Exception e )
+        {
+            throw ( new LockerException( "Getting set summary failed: " + e.getMessage() ) );
         }
     }
     

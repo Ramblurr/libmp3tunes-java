@@ -58,7 +58,7 @@ public class Artist {
 		if (mAlbums == null) { // we need to fetch the tracks
 			try {
 				mAlbums = Locker
-						.fetchAlbums(Integer.toString(this.mId), "", "");
+						.fetchAlbums(Integer.toString(this.mId), "", "", null).getData();
 			} catch (LockerException e) {
 				mAlbums = new ArrayList<Album>();
 			}

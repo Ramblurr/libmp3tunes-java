@@ -99,7 +99,7 @@ public class Album {
 		if (mTracks == null) { // we need to fetch the tracks
 			try {
 				mTracks = Locker
-						.fetchTracks("", "", Integer.toString(this.mId), "");
+						.fetchTracks("", "", Integer.toString(this.mId), "", null).getData();
 			} catch (LockerException e) {
 				mTracks = new ArrayList<Track>();
 			}
