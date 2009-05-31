@@ -1,7 +1,5 @@
 package com.binaryelysium.mp3tunes.api.results;
 
-import java.util.Collection;
-
 
 /**
  * In some instances, it may be desirable to limit the size of a result set due to 

@@ -43,11 +43,11 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import com.binaryelysium.util.StringUtilities;
-import com.sun.net.httpserver.HttpsConfigurator;
 
 public class Caller {
 
-	public class CallerException extends RuntimeException {
+	@SuppressWarnings("serial")
+    public class CallerException extends RuntimeException {
 
 		public CallerException() {
 		}
@@ -68,7 +68,6 @@ public class Caller {
 	public static final String API_GENERAL = "http://ws.mp3tunes.com/api/v1/";
 	public static final String API_STORAGE = "http://ws.mp3tunes.com/api/v1/";
 	public static final String API_LOGIN = "https://shop.mp3tunes.com/api/v1/";
-	private static final String PARAM_PARTNER_TOKEN = "partner_token";
 	private static final String PARAM_OUTPUT_METHOD = "output";
 	private static final String PARAM_OUTPUT_TYPE = "xml";
 	private static final Caller instance = new Caller();

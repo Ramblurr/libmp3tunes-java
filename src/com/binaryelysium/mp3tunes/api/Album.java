@@ -18,9 +18,6 @@
  ***************************************************************************/
 package com.binaryelysium.mp3tunes.api;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.xmlpull.v1.XmlPullParser;
 
 public class Album {

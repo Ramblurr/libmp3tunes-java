@@ -1,7 +1,5 @@
 package com.binaryelysium.mp3tunes.api.results;
 
-import java.util.Collection;
-
 
 public class DataResult<E>
 {

@@ -21,7 +21,6 @@ package com.binaryelysium.mp3tunes.api;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -485,7 +484,7 @@ public class Locker
                     event = restResult.getParser().next();
                 }
                 
-                DataResult results = new DataResult<Track>( "playlist", playlists.size() );
+                DataResult<Playlist> results = new DataResult<Playlist>( "playlist", playlists.size() );
                 results.setData( playlists.toArray(new Playlist[playlists.size()]) );
                 return results;
             }
