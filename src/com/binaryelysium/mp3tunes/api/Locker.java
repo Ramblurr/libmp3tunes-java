@@ -27,6 +27,9 @@ import java.util.Map;
 
 import org.xmlpull.v1.XmlPullParser;
 
+import com.binaryelysium.mp3tunes.api.results.DataResult;
+import com.binaryelysium.mp3tunes.api.results.SetResult;
+
 public class Locker
 {
 
@@ -115,29 +118,46 @@ public class Locker
 
     public Artist getArtist( int id ) throws NoSuchEntryException
     {
-
-        Collection<Artist> list = fetchArtists( Integer.toString( id ) );
-        if ( list.size() == 1 )
-            return list.iterator().next();
+        DataResult<Artist> res = fetchArtists( Integer.toString( id ), null );
+        if ( res.getData().size() == 1 )
+            return res.getData().iterator().next();
         else
             throw ( new NoSuchEntryException( "No such artist w/ id " + id ) );
 
     }
 
-    public Collection<Artist> getArtists() throws LockerException
+    public DataResult<Artist> getArtists() throws LockerException
     {
 
-        return fetchArtists( "" );
+        return fetchArtists( "", null );
     }
-
-    private Collection<Artist> fetchArtists( String artistId ) throws LockerException
+    
+    /**
+     * Fetch a subset of artists 
+     * 
+     * @param count maximum number of results to be returned in a result set
+     * @param set the result set number to retrieve, note that set numbers are 0 based
+     * @return a list of count artists  
+     * @throws LockerException
+     */
+    public SetResult<Artist> getArtistsSet(int count, int set) throws LockerException
     {
 
+        return (SetResult<Artist>) fetchArtists( "", new SetQuery( count, set ) );
+    }
+    
+    private DataResult<Artist> fetchArtists( String artistId, SetQuery setQuery ) throws LockerException
+    {
         String m = "lockerData";
         Map<String, String> params = new HashMap<String, String>();
         params.put( "type", "artist" );
         if ( artistId != "" )
             params.put( "artist_id", artistId );
+        else if ( setQuery != null )
+        {
+            params.put( "count", setQuery.count );
+            params.put( "set", setQuery.set );
+        }
         try
         {
             System.out.println("Making GET ARTISTS call");
@@ -145,6 +165,25 @@ public class Locker
             System.out.println("BACK FROM GET ARTISTS call");
             if ( !restResult.isSuccessful() )
                 throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
+            
+            DataResult<Artist> results = null;
+            if(setQuery != null )
+                results = parseSetSummary(restResult);
+            
+            Collection<Artist> artists = parseArtists(restResult);
+            if(results == null)
+                results = new DataResult<Artist>("artist", artists.size());
+            results.setData( artists );
+            return results;
+        }
+        catch ( IOException e )
+        {
+            throw ( new LockerException( "connection issue" ) );
+        }
+    }
+
+    private Collection<Artist> parseArtists( RestResult restResult ) throws LockerException
+    {
             try
             {
                 Collection<Artist> artists = new ArrayList<Artist>();
@@ -176,12 +215,57 @@ public class Locker
             {
                 throw ( new LockerException( "Getting all artists failed: " + e.getMessage() ) );
             }
-        }
-        catch ( IOException e )
-        {
-            throw ( new LockerException( "connection issue" ) );
-        }
 
+
+    }
+    
+    private <E> SetResult<E> parseSetSummary(RestResult restResult)
+    {
+        try
+        {
+            SetResult<E> result = new SetResult<E>();
+            int event = restResult.getParser().nextTag();
+            boolean loop = true;
+            while ( loop && event != XmlPullParser.END_DOCUMENT )
+            {
+                String name = restResult.getParser().getName();
+                switch ( event )
+                {
+                case XmlPullParser.START_TAG:
+                    if ( name.equals( "type" ) )
+                    {
+                        result.setType( restResult.getParser().nextText());
+                    }
+                    else if ( name.equals( "totalResults" ) )
+                    {
+                        result.setTotalResults( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "set" ) )
+                    {
+                        result.setSet( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "count" ) )
+                    {
+                        result.setCount( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "totalResultSets" ) )
+                    {
+                        result.setTotalResultSets( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    if ( name.equals( "summary" ) )
+                        loop = false;
+                    break;
+                }
+                event = restResult.getParser().next();
+            }
+            return result;
+        }
+        catch ( Exception e )
+        {
+            throw ( new LockerException( "Getting set summary failed: " + e.getMessage() ) );
+        }
     }
 
     public Album getAlbum( int id ) throws NoSuchEntryException
@@ -405,6 +489,17 @@ public class Locker
         {
             throw ( new LockerException( "connection issue" ) );
         }
+    }
+    
+    private class SetQuery {
+        String count;
+        String set;
+        public SetQuery( int count, int set )
+        {
+            this.count = Integer.toString( count );
+            this.set = Integer.toString( set );
+        }
+        
     }
 
 }
