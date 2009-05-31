@@ -28,6 +28,7 @@ import java.util.Map;
 import org.xmlpull.v1.XmlPullParser;
 
 import com.binaryelysium.mp3tunes.api.results.DataResult;
+import com.binaryelysium.mp3tunes.api.results.SearchResult;
 import com.binaryelysium.mp3tunes.api.results.SetResult;
 
 public class Locker
@@ -626,5 +627,109 @@ public class Locker
         }
         
     }
+    
+    public SearchResult search(String query, boolean artist, boolean album, boolean track, int count, int set )
+    {
+        if( !artist && !album && !track )
+            return null;
+        String m = "lockerSearch";
+        Map<String, String> params = new HashMap<String, String>();
+        
+        params.put( "s", query );
+        String type = "";
+        if ( artist )
+            type += "artist,";
+        if ( album)
+            type += "album,";
+        if ( track )
+            type += "track,";
+        type = type.substring( 0, type.length()-1 ); // remove trailing comma
+        params.put( "type", type );
+        
+        if ( count > 0 )
+            params.put( "count", Integer.toString( count ) );
+        if ( set >= 0 )
+            params.put( "set", Integer.toString( set ) );
+
+        try
+        {
+            RestResult restResult = Caller.getInstance().call( m, params );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
+            
+            SearchResult result = parseSearchSummary( restResult );
+            
+            if( artist )
+                result.setArtists( parseArtists( restResult ) );
+            if( album )
+                result.setAlbums( parseAlbums( restResult ) );
+            if( track )
+                result.setTracks( parseTracks( restResult ) );
+
+            return result;
+        }
+        catch ( IOException e )
+        {
+            throw ( new LockerException( "connection issue" ) );
+        }
+    }
+    
+    private static SearchResult parseSearchSummary(RestResult restResult)
+    {
+        try
+        {
+            SearchResult result = new SearchResult();
+            int event = restResult.getParser().nextTag();
+            boolean loop = true;
+            while ( loop && event != XmlPullParser.END_DOCUMENT )
+            {
+                String name = restResult.getParser().getName();
+                switch ( event )
+                {
+                case XmlPullParser.START_TAG:
+                    if ( name.equals( "type" ) )
+                    {
+                        result.setType( restResult.getParser().nextText());
+                    }
+                    else if ( name.equals( "artist" ) )
+                    {
+                        result.setTotalArtistResults( ( Integer.parseInt(restResult.getParser().nextText() ) ) );
+                    }
+                    else if ( name.equals( "album" ) )
+                    {
+                        result.setTotalAlbumResults( ( Integer.parseInt(restResult.getParser().nextText() ) ) );
+                    }
+                    else if ( name.equals( "track" ) )
+                    {
+                        result.setTotalTrackResults( ( Integer.parseInt(restResult.getParser().nextText() ) ) );
+                    }
+                    else if ( name.equals( "set" ) )
+                    {
+                        result.setSet( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "count" ) )
+                    {
+                        result.setCount( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    else if ( name.equals( "totalResultSets" ) )
+                    {
+                        result.setTotalResultSets( Integer.parseInt(restResult.getParser().nextText() ) );
+                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    if ( name.equals( "summary" ) )
+                        loop = false;
+                    break;
+                }
+                event = restResult.getParser().next();
+            }
+            return result;
+        }
+        catch ( Exception e )
+        {
+            throw ( new LockerException( "Getting set summary failed: " + e.getMessage() ) );
+        }
+    }
+    
 
 }
