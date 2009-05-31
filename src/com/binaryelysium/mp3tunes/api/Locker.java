@@ -499,6 +499,74 @@ public class Locker
         }
     }
     
+    public DataResult<Token> getArtistTokens() throws LockerException
+    {
+        return fetchTokens("artist");
+    }
+    
+    public DataResult<Token> getAlbumTokens() throws LockerException
+    {
+        return fetchTokens("album");
+    }
+    
+    public DataResult<Token> getTrackTokens() throws LockerException
+    {
+        return fetchTokens("track");
+    }
+    
+    protected static DataResult<Token> fetchTokens( String type )throws LockerException
+    {
+        String m = "lockerData";
+        Map<String, String> params = new HashMap<String, String>();
+        params.put( "type", type+"_token" );
+        try
+        {
+            RestResult restResult = Caller.getInstance().call( m, params );
+            if ( !restResult.isSuccessful() )
+                throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
+            List<Token> tokens = new ArrayList<Token>();
+            try
+            {
+                int event = restResult.getParser().nextTag();
+                boolean loop = true;
+                while ( loop && event != XmlPullParser.END_DOCUMENT )
+                {
+                    String name = restResult.getParser().getName();
+                    switch ( event )
+                    {
+                    case XmlPullParser.START_TAG:
+                        if ( name.equals( "item" ) )
+                        {
+                            Token t = Token.tokenFromResult( restResult );
+                            if ( t != null )
+                                tokens.add( t );
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if ( name.equals( "tokenList" ) )
+                            loop = false;
+                        break;
+                    }
+                    event = restResult.getParser().next();
+                }
+            }
+            catch ( Exception e )
+            {
+                throw ( new LockerException( "Getting albums failed: " + e.getMessage() ) );
+            }
+         
+            
+            DataResult<Token> results = new DataResult<Token>( type+"_token", tokens.size() );
+            results.setData( tokens.toArray(new Token[tokens.size()]) );
+            return results;
+        }
+        catch ( IOException e )
+        {
+            throw ( new LockerException( "connection issue" ) );
+        }
+    }
+    
+    
     private static <E> SetResult<E> parseSetSummary(RestResult restResult)
     {
         try
