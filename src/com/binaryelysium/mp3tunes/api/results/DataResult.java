@@ -7,7 +7,7 @@ public class DataResult<E>
 {
     protected String mType;
     protected int mTotalResults;
-    protected Collection<E> mData;
+    protected E[] mData;
     
     public DataResult(String type, int totalResults)
     {
@@ -39,12 +39,12 @@ public class DataResult<E>
         mTotalResults = totalResults;
     }
     
-    public Collection<E> getData()
+    public E[] getData()
     {
         return mData;
     }
     
-    public void setData(Collection<E> data)
+    public void setData(E[] data)
     {
         mData = data;
     }

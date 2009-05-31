@@ -34,7 +34,7 @@ public class Album {
 	int mHasArt;
 	int mArtistId;
 	String mArtistName;
-	Collection<Track> mTracks;
+	Track[] mTracks;
 
 	private Album() {
 	}
@@ -95,13 +95,13 @@ public class Album {
 		return mArtistName;
 	}
 
-	public Collection<Track> getTracks() {
+	public Track[] getTracks() {
 		if (mTracks == null) { // we need to fetch the tracks
 			try {
 				mTracks = Locker
 						.fetchTracks("", "", Integer.toString(this.mId), "", null).getData();
 			} catch (LockerException e) {
-				mTracks = new ArrayList<Track>();
+				mTracks = new Track[0];
 			}
 		}
 		return mTracks;

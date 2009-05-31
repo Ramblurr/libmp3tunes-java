@@ -29,7 +29,7 @@ public class Artist {
 	int mTrackCount;
 	int mAlbumCount;
 	int mSize;
-	Collection<Album> mAlbums;
+	Album[] mAlbums;
 
 	public int getId() {
 		return mId;
@@ -54,13 +54,13 @@ public class Artist {
 	private Artist() {
 	}
 	
-	public Collection<Album> getAlbums() {
+	public Album[] getAlbums() {
 		if (mAlbums == null) { // we need to fetch the tracks
 			try {
 				mAlbums = Locker
 						.fetchAlbums(Integer.toString(this.mId), "", "", null).getData();
 			} catch (LockerException e) {
-				mAlbums = new ArrayList<Album>();
+				mAlbums = new Album[0];
 			}
 		}
 		return mAlbums;

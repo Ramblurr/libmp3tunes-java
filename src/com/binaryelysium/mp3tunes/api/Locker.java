@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -119,8 +120,8 @@ public class Locker
     public Artist getArtist( int id ) throws NoSuchEntryException
     {
         DataResult<Artist> res = fetchArtists( Integer.toString( id ), null );
-        if ( res.getData().size() == 1 )
-            return res.getData().iterator().next();
+        if ( res.getData().length == 1 )
+            return res.getData()[0];
         else
             throw ( new NoSuchEntryException( "No such artist w/ id " + id ) );
 
@@ -170,9 +171,9 @@ public class Locker
             if(setQuery != null )
                 results = parseSetSummary(restResult);
             
-            Collection<Artist> artists = parseArtists(restResult);
+            Artist[] artists = parseArtists(restResult);
             if(results == null)
-                results = new DataResult<Artist>("artist", artists.size());
+                results = new DataResult<Artist>("artist", artists.length);
             results.setData( artists );
             return results;
         }
@@ -182,11 +183,11 @@ public class Locker
         }
     }
 
-    private static Collection<Artist> parseArtists( RestResult restResult ) throws LockerException
+    private static Artist[] parseArtists( RestResult restResult ) throws LockerException
     {
             try
             {
-                Collection<Artist> artists = new ArrayList<Artist>();
+                List<Artist> artists = new ArrayList<Artist>();
                 int event = restResult.getParser().nextTag();
                 boolean loop = true;
                 while ( loop && event != XmlPullParser.END_DOCUMENT )
@@ -209,7 +210,7 @@ public class Locker
                     }
                     event = restResult.getParser().next();
                 }
-                return artists;
+                return artists.toArray(new Artist[artists.size()]);
             }
             catch ( Exception e )
             {
@@ -222,9 +223,9 @@ public class Locker
     public Album getAlbum( int id ) throws NoSuchEntryException
     {
 
-        Collection<Album> list = fetchAlbums( "", "", Integer.toString( id ), null ).getData();
-        if ( list.size() == 1 )
-            return list.iterator().next();
+        Album[] list = fetchAlbums( "", "", Integer.toString( id ), null ).getData();
+        if ( list.length == 1 )
+            return list[0];
         else
             throw ( new NoSuchEntryException( "No such album w/ id " + id ) );
     }
@@ -282,9 +283,9 @@ public class Locker
             if(setQuery != null )
                 results = parseSetSummary(restResult);
             
-            Collection<Album> albums = parseAlbums(restResult);
+            Album[] albums = parseAlbums(restResult);
             if(results == null)
-                results = new DataResult<Album>("album", albums.size());
+                results = new DataResult<Album>("album", albums.length);
             results.setData( albums );
             return results;
         }
@@ -295,11 +296,11 @@ public class Locker
 
     }
     
-    private static Collection<Album> parseAlbums( RestResult restResult ) throws LockerException
+    private static Album[] parseAlbums( RestResult restResult ) throws LockerException
     {
         try
         {
-            Collection<Album> albums = new ArrayList<Album>();
+            List<Album> albums = new ArrayList<Album>();
             int event = restResult.getParser().nextTag();
             boolean loop = true;
             while ( loop && event != XmlPullParser.END_DOCUMENT )
@@ -322,7 +323,7 @@ public class Locker
                 }
                 event = restResult.getParser().next();
             }
-            return albums;
+            return albums.toArray(new Album[albums.size()]);
         }
         catch ( Exception e )
         {
@@ -393,15 +394,15 @@ public class Locker
             
             //NOTE: when set and type=track are passed the tracklist comes BEFORE the set summary
             // Hence why this parseTracks call is before the parseSetSummary
-            Collection<Track> tracks = parseTracks(restResult);
+            Track[] tracks = parseTracks( restResult );
             
             DataResult<Track> results = null;
             if(setQuery != null )
-                results = parseSetSummary(restResult);
+                results = parseSetSummary( restResult );
             
             
             if(results == null)
-                results = new DataResult<Track>("track", tracks.size());
+                results = new DataResult<Track>( "track", tracks.length );
             results.setData( tracks );
             return results;
         }
@@ -412,11 +413,11 @@ public class Locker
 
     }
     
-    private static Collection<Track> parseTracks( RestResult restResult ) throws LockerException
+    private static Track[] parseTracks( RestResult restResult ) throws LockerException
     {
         try
         {
-            Collection<Track> tracks = new ArrayList<Track>();
+            List<Track> tracks = new ArrayList<Track>();
             int event = restResult.getParser().nextTag();
             boolean loop = true;
             while ( loop && event != XmlPullParser.END_DOCUMENT )
@@ -439,7 +440,7 @@ public class Locker
                 }
                 event = restResult.getParser().next();
             }
-            return tracks;
+            return tracks.toArray(new Track[tracks.size()]);
         }
         catch ( Exception e )
         {
@@ -447,7 +448,7 @@ public class Locker
         }
     }
     
-    public Collection<Playlist> getPlaylists() throws LockerException
+    public DataResult<Playlist> getPlaylists() throws LockerException
     {
 
         String m = "lockerData";
@@ -460,7 +461,7 @@ public class Locker
                 throw ( new LockerException( "Call Failed: " + restResult.getErrorMessage() ) );
             try
             {
-                Collection<Playlist> playlists = new ArrayList<Playlist>();
+                List<Playlist> playlists = new ArrayList<Playlist>();
                 int event = restResult.getParser().nextTag();
                 boolean loop = true;
                 while ( loop && event != XmlPullParser.END_DOCUMENT )
@@ -483,7 +484,10 @@ public class Locker
                     }
                     event = restResult.getParser().next();
                 }
-                return playlists;
+                
+                DataResult results = new DataResult<Track>( "playlist", playlists.size() );
+                results.setData( playlists.toArray(new Playlist[playlists.size()]) );
+                return results;
             }
             catch ( Exception e )
             {
