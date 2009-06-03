@@ -53,10 +53,21 @@ public class Locker
 
     public Locker( String partnerToken, String username, String password ) throws LockerException
     {
+        mPartnerToken = partnerToken;
+        refreshSession( username, password );
+        
+    }
+    
+    public Session getCurrentSession()
+    {
+        return mSession;
+    }
 
+    public void refreshSession( String username, String password )
+    {
         try
         {
-            mSession = Authenticator.getSession( partnerToken, username, password );
+            mSession = Authenticator.getSession( mPartnerToken, username, password );
         }
         catch ( IOException e )
         {
@@ -65,7 +76,6 @@ public class Locker
         Caller.getInstance().setSession( mSession );
         if ( mSession == null )
             throw ( new LockerException( "connection issue" ) );
-        mPartnerToken = partnerToken;
     }
 
     public long getLastUpdate( UpdateType type ) throws LockerException

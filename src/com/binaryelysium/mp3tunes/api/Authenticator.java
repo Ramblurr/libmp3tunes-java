@@ -30,9 +30,9 @@ public class Authenticator {
 	/**
 	 * Fetch a session key for a user.
 	 *
-	 * @param token A token returned by {@link #getToken(String)}
-	 * @param apiKey A last.fm API key
-	 * @param secret Your last.fm API secret
+	 * @param token the mp3tunes partner token
+	 * @param user the username
+	 * @param the user's password
 	 * @return a Session instance
 	 * @see Session
 	 */
