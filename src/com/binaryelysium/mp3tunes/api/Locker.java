@@ -458,12 +458,14 @@ public class Locker
         }
     }
     
-    public DataResult<Playlist> getPlaylists() throws LockerException
+    public DataResult<Playlist> getPlaylists( boolean playmix ) throws LockerException
     {
 
         String m = "lockerData";
         Map<String, String> params = new HashMap<String, String>();
         params.put( "type", "playlist" );
+        if( !playmix )
+            params.put( "noplaymix", "1" );
         try
         {
             RestResult restResult = Caller.getInstance().call( m, params );
