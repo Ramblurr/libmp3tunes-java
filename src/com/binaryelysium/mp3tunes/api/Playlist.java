@@ -24,7 +24,7 @@ import java.util.Collection;
 import org.xmlpull.v1.XmlPullParser;
 
 public class Playlist {
-	int mId;
+    String mId;
 	String mName;
 	String mFileName;
 	int mCount;
@@ -33,18 +33,17 @@ public class Playlist {
 	Collection<Track> mTracks;
 	
 	public final static String RANDOM_TRACKS = "RANDOM_TRACKS";
-	public final static int RANDOM_TRACKS_ID = -1;
 	
     public final static String NEWEST_TRACKS = "NEWEST_TRACKS";
-    public final static int NEWEST_TRACKS_ID = -2;
     
     public final static String RECENTLY_PLAYED = "RECENTLY_PLAYED";
-    public final static int RECENTLY_PLAYED_ID = -3;
+    
+    public final static String INBOX = "INBOX";
 
 
 	private Playlist() {}
 	
-	public Playlist( int id, String name, String fileName, int count, String dateModified, int size )
+	public Playlist( String id, String name, String fileName, int count, String dateModified, int size )
     {
         mId = id;
         mName = name;
@@ -69,15 +68,19 @@ public class Playlist {
                 case XmlPullParser.START_TAG:
                     if ( name.equals( "playlistId" ) )
                     {
-                        String id = restResult.getParser().nextText();
-                        if( id.equals( RANDOM_TRACKS ) )
-                            p.mId = RANDOM_TRACKS_ID;
-                        else if (id.equals( RECENTLY_PLAYED ) )
-                            p.mId = RECENTLY_PLAYED_ID;
-                        else if ( id.equals( NEWEST_TRACKS ))
-                            p.mId = NEWEST_TRACKS_ID;
-                        else
-                            p.mId = Integer.parseInt( id );
+                        p.mId  = restResult.getParser().nextText();
+//                        System.out.println("PLAYLIST: " + id);
+//                        if( id.equals( RANDOM_TRACKS ) )
+//                            p.mId = RANDOM_TRACKS_ID;
+//                        else if (id.equals( RECENTLY_PLAYED ) )
+//                        {
+//                            p.mId = RECENTLY_PLAYED_ID;
+//                            System.out.println("GOT RECENTLY_PLAYED");
+//                        }
+//                        else if ( id.equals( NEWEST_TRACKS ))
+//                            p.mId = NEWEST_TRACKS_ID;
+//                        else
+//                            p.mId = Integer.parseInt( id );
                     }
                     else if ( name.equals( "playlistTitle" ) )
                     {
@@ -91,10 +94,10 @@ public class Playlist {
                     {
                         p.mCount = Integer.parseInt( restResult.getParser().nextText() );
                     }
-                    else if ( name.equals( "playlistSize" ) )
-                    {
-                        p.mSize = Integer.parseInt( restResult.getParser().nextText() );
-                    }
+//                    else if ( name.equals( "playlistSize" ) )
+//                    {
+//                        p.mSize = Integer.parseInt( restResult.getParser().nextText() );
+//                    }
 //                    else if ( name.equals( "dateModified" ) )
 //                    {
 //                        p.mDateModified = result.getParser().nextText();
@@ -129,7 +132,7 @@ public class Playlist {
 		return new Playlist();
 	}
 	
-	public int getId() {
+	public String getId() {
 		return mId;
 	}
 

@@ -365,10 +365,10 @@ public class Locker
         return fetchTracks( "", token, "", "", null );
     }
     
-    public DataResult<Track> getTracksForPlaylist( int playlistId) throws LockerException
+    public DataResult<Track> getTracksForPlaylist( String playlistId) throws LockerException
     {
 
-        return fetchTracks( "", "", "", Integer.toString(playlistId), null );
+        return fetchTracks( "", "", "", playlistId, null );
     }
     
     public SetResult<Track> getTracksSet( int count, int set )
